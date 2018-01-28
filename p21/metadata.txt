@@ -1,0 +1,10 @@
+[general]
+name=P21 Plugin
+qgisMinimumVersion=2.0
+qgisMaximumVersion=
+description=P21 Calculation using vectors layers
+version=0.0.1
+author=elidioxg
+email=
+about=
+
