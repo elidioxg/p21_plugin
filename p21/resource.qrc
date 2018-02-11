@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/p21">
+        <file>icon.png</file>
+    </qresource>
+</RCC>
