@@ -1,19 +1,89 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCor import *
-from PyQt4.QtGui import *
 from qgis.core import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+from p21widget import P21DockWidget
+
+import os
 
 class P21:
-
+    icon_dir = ':/plugins/p21/icon.png'
+    text = u''
+    add_to_toolbar = True
+    add_to_menu = True
+    enabled = True
+    status_tip = None 
+    whats_this = None
+    
     def __init__(self, iface):
         self.iface = iface
+        self.plugin_dir = os.path.dirname(__file__)
+        self.parent = self.iface.mainWindow()
+        self.callback=self.run
+ 
+        locale = QSettings().value('locale/userLocale')[0:2]
+        locale_path = os.path.join(
+            self.plugin_dir,
+            'i18n',
+            'p21_{}.qm'.format(locale))
+
+        if os.path.exists(locale_path):
+            self.translator = QTranslator()
+            self.translator.load(locale_path)
+
+            if qVersion() > '4.3.3':
+                QCoreApplication.installTranslator(self.translator)
+
+        self.actions = []
+        self.menu = self.tr(u'&P21')
+        
+        self.toolbar = self.iface.addToolBar(u'p21')
+        self.toolbar.setObjectName(u'p21')       
+
+        self.pluginIsActive = False
+        self.dockwidget = None
 
     def initGui(self):
-        pass
+        icon = QIcon(self.icon_dir)
+               
+        action = QAction(icon, self.tr(self.text), self.parent)
+        action.triggered.connect(self.callback)
+        action.setEnabled(self.enabled)                
+
+        if self.status_tip is not None:
+            action.setStatusTip(self.status_tip)
+        if self.whats_this is not None:
+            action.setWhatsThis(self.whats_this)       
+
+        if self.add_to_toolbar:
+            self.toolbar.addAction(action)
+        if self.add_to_menu:
+            self.iface.addPluginToVectorMenu(
+                self.menu,
+                action)
+        self.actions.append(action)      
 
     def unload(self):
-        pass
+        for action in self.actions:
+            self.iface.removePluginVectorMenu(self.tr(u'&P21'), action)
+            self.iface.removeToolBarIcon(action)
+        del self.toolbar
 
     def run(self):
-        pass
+        if not self.pluginIsActive:
+            self.pluginIsActive = True
+            if self.dockwidget is None:
+                self.dockwidget = P21DockWidget()
+            self.dockwidget.closingPlugin.connect(self.onClose)
+
+            self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
+            self.dockwidget.show()
+
+    def onClose(self):
+        self.dockwidget.closingPlugin.disconnect(self.onClose)
+        self.pluginIsActive = False
+
+    def tr(self, message):        
+        return QCoreApplication.translate('p21', message)
