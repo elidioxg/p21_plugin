@@ -6,6 +6,8 @@ from PyQt4.QtGui import *
 
 from p21widget import P21DockWidget
 
+import resource
+
 import os
 
 class P21:
@@ -87,3 +89,40 @@ class P21:
 
     def tr(self, message):        
         return QCoreApplication.translate('p21', message)
+
+    def showMessage(self, title, message):
+        widget  = iface.messageBar().createMessage(title, message)
+       
+    def logInfo(self, title, message):
+        QgisMessageLog.logMessage(title, message, QgsMessageLog.INFO)
+
+    def logWarning(self, title, message):
+        QgisMessageLog.logMessage(title, message, QgsMessageLog.WARNING)
+
+    def logCritical(self, title, message):
+        QgisMessageLog.logMessage(title, message, QgsMessageLog.CRITICAL)
+
+    def getVectorLayersNames(self):
+        layers = self.iface.legendInterface().layers()
+        result = []
+        for layer in layers:
+            layerType = layer.type()
+            if layerType == QgsMapLayer.VectorLayer:
+                result.append(layer.name())
+        return result
+
+    def getAreaFromPolygon(self, layer):
+        features = layer.getFeatures()
+        geometry = feature.geometry()
+        if geometry.wkbType() == QgsWkbTypes.Polygon:
+            return geometry.area()
+        else:
+            return None
+
+    def getLineLength(self, layer):
+        features = layer.getFeatures()
+        result = 0.
+        for feature in features:
+            geometry = feature.geometry()
+            result += geometry.length()
+        return result
